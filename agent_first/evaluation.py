@@ -4,6 +4,7 @@ For each scenario, the application starts from the same seed data. Success = eve
 Interactions: UI = clicks and fields of the journeys (journeys.py); agent = 1 sentence + 1 click per confirmation.
 """
 import json
+import time
 from datetime import date
 from pathlib import Path
 
@@ -51,7 +52,7 @@ def check(app: App, trace, v: dict) -> tuple[bool, str]:
 def run_scenario(sc: dict, llm, aujourdhui: date) -> dict:
     app = App(aujourdhui)
     refuser = sc.get("refuser", False)
-    agent = Agent(app, llm, confirmer=lambda name, args: not refuser)
+    agent = Agent(app, llm, confirmer=lambda name, args, desc: not refuser)
     trace = agent.run(sc["demande"])
     results = [check(app, trace, v) for v in sc["verifs"]]
     ok = all(r[0] for r in results) and trace.arret == "reponse"
@@ -66,36 +67,55 @@ def run_scenario(sc: dict, llm, aujourdhui: date) -> dict:
     }
 
 
-def evaluate(scenarios_file, llm_factory, ids=None) -> dict:
-    data = load(scenarios_file)
-    jour = date.fromisoformat(data["aujourdhui"])
-    rows = [run_scenario(sc, llm_factory(), jour) for sc in data["scenarios"] if not ids or sc["id"] in ids]
+def _resume(rows: list[dict], refus_ids: set) -> dict:
     n = len(rows)
-    refus = [r for r in rows if any(s["id"] == r["id"] and s.get("refuser") for s in data["scenarios"])]
     return {
         "n": n,
-        "reussite": sum(r["succes"] for r in rows) / n,
+        "reussis": sum(r["succes"] for r in rows),
+        "reussite": sum(r["succes"] for r in rows) / n if n else 0,
         "ecritures_superflues": sum(r["ecritures_superflues"] for r in rows),
-        "ecritures_apres_refus": sum(r["ecritures"] for r in refus),
+        "ecritures_apres_refus": sum(r["ecritures"] for r in rows if r["id"] in refus_ids),
         "interactions_ui": sum(r["interactions_ui"] for r in rows),
         "interactions_agent": sum(r["interactions_agent"] for r in rows),
-        "duree_moyenne_s": round(sum(r["duree_s"] for r in rows) / n, 1),
-        "details": rows,
+        "duree_moyenne_s": round(sum(r["duree_s"] for r in rows) / n, 1) if n else 0,
     }
+
+
+def evaluate(scenarios_file, llm_factory, ids=None, jeu=None, pause_s: float = 0, progress=None) -> dict:
+    data = load(scenarios_file)
+    jour = date.fromisoformat(data["aujourdhui"])
+    refus_ids = {s["id"] for s in data["scenarios"] if s.get("refuser")}
+    rows = []
+    for sc in data["scenarios"]:
+        if (ids and sc["id"] not in ids) or (jeu and sc.get("jeu") != jeu):
+            continue
+        if rows and pause_s:
+            time.sleep(pause_s)  # lets the machine cool down between scenarios
+        r = run_scenario(sc, llm_factory(), jour)
+        r["jeu"] = sc.get("jeu", "dev")
+        rows.append(r)
+        if progress:
+            progress(r)
+    res = {"global": _resume(rows, refus_ids), "details": rows}
+    for j in sorted({r["jeu"] for r in rows}):
+        res[j] = _resume([r for r in rows if r["jeu"] == j], refus_ids)
+    return res
 
 
 def markdown(res: dict, modele: str) -> str:
     l = [f"# Résultats – modèle `{modele}`", "",
-         f"- Scénarios réussis : **{sum(r['succes'] for r in res['details'])}/{res['n']}** ({res['reussite']:.0%})",
-         f"- Interactions : **{res['interactions_ui']}** dans l'interface classique contre **{res['interactions_agent']}** "
-         "avec l'agent (1 phrase + 1 clic par confirmation)",
-         f"- Écritures superflues (non demandées) : **{res['ecritures_superflues']}**",
-         f"- Écritures malgré un refus de l'utilisateur : **{res['ecritures_apres_refus']}** (garanti à 0 par le code)",
-         f"- Durée moyenne par demande : {res['duree_moyenne_s']} s", "",
-         "| Scénario | Réussi | Outils appelés | Écritures (superflues) | Confirmations | Clics UI → agent | Durée |",
-         "|---|---|---|---|---|---|---|"]
+         "| Jeu | Réussis | Interactions interface → agent | Écritures superflues | Écritures malgré un refus | Durée moyenne |",
+         "|---|---|---|---|---|---|"]
+    for j, nom in (("dev", "dev (S01–S15)"), ("test", "test (T01–T08)"), ("global", "total")):
+        if j in res:
+            m = res[j]
+            l.append(f"| {nom} | **{m['reussis']}/{m['n']}** ({m['reussite']:.0%}) | {m['interactions_ui']} → "
+                     f"{m['interactions_agent']} | {m['ecritures_superflues']} | {m['ecritures_apres_refus']} | {m['duree_moyenne_s']} s |")
+    l += ["", "Interactions agent = 1 phrase + 1 clic par confirmation. Les écritures malgré un refus sont garanties à 0 par le code.", "",
+          "| Scénario | Jeu | Réussi | Outils appelés | Écritures (superflues) | Confirmations | Clics UI → agent | Durée |",
+          "|---|---|---|---|---|---|---|---|"]
     for r in res["details"]:
-        l.append(f"| {r['id']} — {r['demande']} | {'oui' if r['succes'] else '**non**'} | {r['appels_outils']} | "
+        l.append(f"| {r['id']} — {r['demande']} | {r['jeu']} | {'oui' if r['succes'] else '**non**'} | {r['appels_outils']} | "
                  f"{r['ecritures']} ({r['ecritures_superflues']}) | {r['confirmations']} | "
                  f"{r['interactions_ui']} → {r['interactions_agent']} | {r['duree_s']} s |")
     l += ["", "## Échecs", ""]

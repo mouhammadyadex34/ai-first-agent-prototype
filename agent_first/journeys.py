@@ -21,6 +21,7 @@ JOURNEYS = {
                      "Cliquer « Ajouter une note »", "Saisir la note", "Valider"],
     "rediger_relance": ["Ouvrir l'onglet Candidatures", "Rechercher la candidature", "Ouvrir la candidature",
                         "Ouvrir l'onglet Messages", "Choisir le modèle « Relance »", "Copier le message"],
+    "consulter_candidature": ["Ouvrir l'onglet Candidatures", "Rechercher la candidature", "Ouvrir la candidature"],
     "compter_envoyees": ["Ouvrir le tableau de bord", "Lire le compteur « Envoyées »"],
 }
 

@@ -90,7 +90,8 @@ class App:
         return [dict(r) for r in self.db.execute("SELECT id, titre FROM documents WHERE type = 'cv' ORDER BY id")]
 
     def lister_candidatures(self, statut: str = "", entreprise: str = ""):
-        rows = [dict(r) for r in self.db.execute("SELECT * FROM candidatures ORDER BY id")]
+        rows = [dict(r) for r in self.db.execute(
+            "SELECT c.*, d.titre AS cv_titre FROM candidatures c LEFT JOIN documents d ON d.id = c.cv_id ORDER BY c.id")]
         return [r for r in rows if (not statut or r["statut"] == statut)
                 and (not entreprise or entreprise.lower() in r["entreprise"].lower())]
 

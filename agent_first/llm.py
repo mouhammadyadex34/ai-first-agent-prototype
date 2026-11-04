@@ -24,12 +24,17 @@ class Reply:
 
 
 class OllamaChat:
-    def __init__(self, model: str, timeout: int = 300, seed: int = 42):
+    """num_ctx and num_thread are kept modest so that a laptop does not overheat (see README)."""
+
+    def __init__(self, model: str, timeout: int = 300, seed: int = 42, num_ctx: int = 4096, num_thread: int | None = None):
         self.model, self.timeout, self.seed = model, timeout, seed
+        self.options = {"temperature": 0, "seed": seed, "num_ctx": num_ctx}
+        if num_thread:
+            self.options["num_thread"] = num_thread
 
     def chat(self, messages: list[dict], tools: list[dict]) -> Reply:
         body = json.dumps({"model": self.model, "messages": messages, "tools": tools, "stream": False,
-                           "options": {"temperature": 0, "seed": self.seed}}).encode()
+                           "options": self.options, "keep_alive": "10m"}).encode()
         req = urllib.request.Request(f"{OLLAMA_URL}/api/chat", data=body, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=self.timeout) as r:
             msg = json.loads(r.read())["message"]

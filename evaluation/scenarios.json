@@ -1,52 +1,467 @@
 {
-  "aujourdhui": "2026-11-05",
-  "description": "15 demandes en langage naturel, avec l'état attendu de l'application après l'agent. Écrites à la main avant toute exécution. 'parcours' = parcours de l'interface qu'il faudrait suivre à la main ; 'ecritures' = nombre d'écritures nécessaires ; 'refuser' = l'utilisateur refuse toute écriture.",
-  "scenarios": [
-    {"id": "S01", "demande": "Retiens l'offre de stage IA générative chez Atlantique Numérique et associe-lui mon CV IA générative.",
-     "parcours": ["retenir_offre", "associer_cv"], "ecritures": 2,
-     "verifs": [{"candidature": {"offre_id": 1}, "attendu": {"statut": "a_postuler", "cv_id": 2}}, {"offre": 1, "statut": "retenue"}]},
-    {"id": "S02", "demande": "Ignore l'offre de technicien support chez Hélios Services.",
-     "parcours": ["ignorer_offre"], "ecritures": 1,
-     "verifs": [{"offre": 3, "statut": "ignoree"}, {"offre": 4, "statut": "nouvelle"}]},
-    {"id": "S03", "demande": "J'ai envoyé hier ma candidature chez Pyrène Logiciels, note-la comme envoyée.",
-     "parcours": ["marquer_envoyee_date"], "ecritures": 1,
-     "verifs": [{"candidature_id": 101, "attendu": {"statut": "envoyee", "envoyee_le": "2026-11-04"}}]},
-    {"id": "S04", "demande": "Quelles candidatures dois-je relancer cette semaine ?",
-     "parcours": ["consulter_relances"], "ecritures": 0,
-     "verifs": [{"aucune_ecriture": true}, {"reponse_contient": ["Garonne Data", "Basque Robotique"]}, {"reponse_ne_contient_pas": ["Landes Tech"]}]},
-    {"id": "S05", "demande": "Décale la relance de ma candidature chez Garonne Data au 20 novembre.",
-     "parcours": ["planifier_relance"], "ecritures": 1,
-     "verifs": [{"candidature_id": 102, "attendu": {"relance_le": "2026-11-20"}}]},
-    {"id": "S06", "demande": "Retiens les deux offres d'IA à Bordeaux.",
-     "parcours": ["retenir_offre", "retenir_offre"], "ecritures": 2,
-     "verifs": [{"candidature": {"offre_id": 1}, "attendu": {"statut": "a_postuler"}}, {"candidature": {"offre_id": 2}, "attendu": {"statut": "a_postuler"}}]},
-    {"id": "S07", "demande": "Ajoute une note à ma candidature chez Basque Robotique : entretien téléphonique prévu jeudi prochain.",
-     "parcours": ["ajouter_note"], "ecritures": 1,
-     "verifs": [{"note": 103, "contient": "entretien"}]},
-    {"id": "S08", "demande": "Prépare-moi un message de relance pour Garonne Data.",
-     "parcours": ["rediger_relance"], "ecritures": 0,
-     "verifs": [{"aucune_ecriture": true}, {"reponse_contient": ["Garonne Data"]}]},
-    {"id": "S09", "demande": "Retiens l'offre full stack de Côte Web, associe mon CV Full stack et marque-la envoyée aujourd'hui.",
-     "parcours": ["retenir_offre", "associer_cv", "marquer_envoyee"], "ecritures": 3,
-     "verifs": [{"candidature": {"offre_id": 5}, "attendu": {"statut": "envoyee", "cv_id": 1, "envoyee_le": "2026-11-05"}}]},
-    {"id": "S10", "demande": "Retiens l'offre de data engineer chez Garonne Data.", "refuser": true,
-     "parcours": ["retenir_offre"], "ecritures": 0,
-     "verifs": [{"aucune_ecriture": true}, {"offre": 12, "statut": "nouvelle"}]},
-    {"id": "S11", "demande": "Marque comme envoyée ma candidature chez Pyrène Logiciels.", "refuser": true,
-     "parcours": ["marquer_envoyee"], "ecritures": 0,
-     "verifs": [{"aucune_ecriture": true}, {"candidature_id": 101, "attendu": {"statut": "a_postuler"}}]},
-    {"id": "S12", "demande": "Retiens l'offre d'Aerotech Sud.",
-     "parcours": ["retenir_offre"], "ecritures": 0,
-     "remarque": "Ambiguë : Aerotech Sud a deux offres. L'agent doit demander laquelle, sans rien modifier.",
-     "verifs": [{"aucune_ecriture": true}]},
-    {"id": "S13", "demande": "Associe mon CV Data à toutes mes candidatures à postuler qui n'ont pas encore de CV.",
-     "parcours": ["associer_cv", "associer_cv"], "ecritures": 2,
-     "verifs": [{"candidature_id": 104, "attendu": {"cv_id": 3}}, {"candidature_id": 105, "attendu": {"cv_id": 3}}, {"candidature_id": 101, "attendu": {"cv_id": 1}}]},
-    {"id": "S14", "demande": "Combien de candidatures ai-je envoyées ?",
-     "parcours": ["compter_envoyees"], "ecritures": 0,
-     "verifs": [{"aucune_ecriture": true}, {"reponse_contient": ["3"]}]},
-    {"id": "S15", "demande": "Ignore les offres d'Hélios Services et retiens celle d'Adour Cloud.",
-     "parcours": ["ignorer_offre", "ignorer_offre", "retenir_offre"], "ecritures": 3,
-     "verifs": [{"offre": 3, "statut": "ignoree"}, {"offre": 4, "statut": "ignoree"}, {"candidature": {"offre_id": 6}, "attendu": {"statut": "a_postuler"}}]}
-  ]
+ "aujourdhui": "2026-11-05",
+ "description": "Demandes en langage naturel, avec l'état attendu de l'application après l'agent, écrites à la main avant exécution. jeu 'dev' (S01–S15) : écrit avant la version 1 ; ses échecs ont guidé la version 2. jeu 'test' (T01–T08) : écrit après la version 1 et avant toute exécution de la version 2, pour mesurer sans biais. 'parcours' = parcours de l'interface à suivre à la main ; 'ecritures' = écritures nécessaires ; 'refuser' = l'utilisateur refuse toute écriture.",
+ "scenarios": [
+  {
+   "id": "S01",
+   "demande": "Retiens l'offre de stage IA générative chez Atlantique Numérique et associe-lui mon CV IA générative.",
+   "parcours": [
+    "retenir_offre",
+    "associer_cv"
+   ],
+   "ecritures": 2,
+   "verifs": [
+    {
+     "candidature": {
+      "offre_id": 1
+     },
+     "attendu": {
+      "statut": "a_postuler",
+      "cv_id": 2
+     }
+    },
+    {
+     "offre": 1,
+     "statut": "retenue"
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S02",
+   "demande": "Ignore l'offre de technicien support chez Hélios Services.",
+   "parcours": [
+    "ignorer_offre"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "offre": 3,
+     "statut": "ignoree"
+    },
+    {
+     "offre": 4,
+     "statut": "nouvelle"
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S03",
+   "demande": "J'ai envoyé hier ma candidature chez Pyrène Logiciels, note-la comme envoyée.",
+   "parcours": [
+    "marquer_envoyee_date"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "candidature_id": 101,
+     "attendu": {
+      "statut": "envoyee",
+      "envoyee_le": "2026-11-04"
+     }
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S04",
+   "demande": "Quelles candidatures dois-je relancer cette semaine ?",
+   "parcours": [
+    "consulter_relances"
+   ],
+   "ecritures": 0,
+   "verifs": [
+    {
+     "aucune_ecriture": true
+    },
+    {
+     "reponse_contient": [
+      "Garonne Data",
+      "Basque Robotique"
+     ]
+    },
+    {
+     "reponse_ne_contient_pas": [
+      "Landes Tech"
+     ]
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S05",
+   "demande": "Décale la relance de ma candidature chez Garonne Data au 20 novembre.",
+   "parcours": [
+    "planifier_relance"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "candidature_id": 102,
+     "attendu": {
+      "relance_le": "2026-11-20"
+     }
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S06",
+   "demande": "Retiens les deux offres d'IA à Bordeaux.",
+   "parcours": [
+    "retenir_offre",
+    "retenir_offre"
+   ],
+   "ecritures": 2,
+   "verifs": [
+    {
+     "candidature": {
+      "offre_id": 1
+     },
+     "attendu": {
+      "statut": "a_postuler"
+     }
+    },
+    {
+     "candidature": {
+      "offre_id": 2
+     },
+     "attendu": {
+      "statut": "a_postuler"
+     }
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S07",
+   "demande": "Ajoute une note à ma candidature chez Basque Robotique : entretien téléphonique prévu jeudi prochain.",
+   "parcours": [
+    "ajouter_note"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "note": 103,
+     "contient": "entretien"
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S08",
+   "demande": "Prépare-moi un message de relance pour Garonne Data.",
+   "parcours": [
+    "rediger_relance"
+   ],
+   "ecritures": 0,
+   "verifs": [
+    {
+     "aucune_ecriture": true
+    },
+    {
+     "reponse_contient": [
+      "Garonne Data"
+     ]
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S09",
+   "demande": "Retiens l'offre full stack de Côte Web, associe mon CV Full stack et marque-la envoyée aujourd'hui.",
+   "parcours": [
+    "retenir_offre",
+    "associer_cv",
+    "marquer_envoyee"
+   ],
+   "ecritures": 3,
+   "verifs": [
+    {
+     "candidature": {
+      "offre_id": 5
+     },
+     "attendu": {
+      "statut": "envoyee",
+      "cv_id": 1,
+      "envoyee_le": "2026-11-05"
+     }
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S10",
+   "demande": "Retiens l'offre de data engineer chez Garonne Data.",
+   "refuser": true,
+   "parcours": [
+    "retenir_offre"
+   ],
+   "ecritures": 0,
+   "verifs": [
+    {
+     "aucune_ecriture": true
+    },
+    {
+     "offre": 12,
+     "statut": "nouvelle"
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S11",
+   "demande": "Marque comme envoyée ma candidature chez Pyrène Logiciels.",
+   "refuser": true,
+   "parcours": [
+    "marquer_envoyee"
+   ],
+   "ecritures": 0,
+   "verifs": [
+    {
+     "aucune_ecriture": true
+    },
+    {
+     "candidature_id": 101,
+     "attendu": {
+      "statut": "a_postuler"
+     }
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S12",
+   "demande": "Retiens l'offre d'Aerotech Sud.",
+   "parcours": [
+    "retenir_offre"
+   ],
+   "ecritures": 0,
+   "remarque": "Ambiguë : Aerotech Sud a deux offres. L'agent doit demander laquelle, sans rien modifier.",
+   "verifs": [
+    {
+     "aucune_ecriture": true
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S13",
+   "demande": "Associe mon CV Data à toutes mes candidatures à postuler qui n'ont pas encore de CV.",
+   "parcours": [
+    "associer_cv",
+    "associer_cv"
+   ],
+   "ecritures": 2,
+   "verifs": [
+    {
+     "candidature_id": 104,
+     "attendu": {
+      "cv_id": 3
+     }
+    },
+    {
+     "candidature_id": 105,
+     "attendu": {
+      "cv_id": 3
+     }
+    },
+    {
+     "candidature_id": 101,
+     "attendu": {
+      "cv_id": 1
+     }
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S14",
+   "demande": "Combien de candidatures ai-je envoyées ?",
+   "parcours": [
+    "compter_envoyees"
+   ],
+   "ecritures": 0,
+   "verifs": [
+    {
+     "aucune_ecriture": true
+    },
+    {
+     "reponse_contient": [
+      "3"
+     ]
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "S15",
+   "demande": "Ignore les offres d'Hélios Services et retiens celle d'Adour Cloud.",
+   "parcours": [
+    "ignorer_offre",
+    "ignorer_offre",
+    "retenir_offre"
+   ],
+   "ecritures": 3,
+   "verifs": [
+    {
+     "offre": 3,
+     "statut": "ignoree"
+    },
+    {
+     "offre": 4,
+     "statut": "ignoree"
+    },
+    {
+     "candidature": {
+      "offre_id": 6
+     },
+     "attendu": {
+      "statut": "a_postuler"
+     }
+    }
+   ],
+   "jeu": "dev"
+  },
+  {
+   "id": "T01",
+   "demande": "Mets de côté l'offre de développeur mobile à La Rochelle.",
+   "parcours": [
+    "retenir_offre"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "candidature": {
+      "offre_id": 11
+     },
+     "attendu": {
+      "statut": "a_postuler"
+     }
+    }
+   ],
+   "jeu": "test"
+  },
+  {
+   "id": "T02",
+   "demande": "Je ne suis pas intéressé par le stage data analyst de Landes Analytics, enlève-le.",
+   "parcours": [
+    "ignorer_offre"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "offre": 7,
+     "statut": "ignoree"
+    }
+   ],
+   "jeu": "test"
+  },
+  {
+   "id": "T03",
+   "demande": "Ma candidature chez Navarre Soft est partie ce matin.",
+   "parcours": [
+    "marquer_envoyee"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "candidature_id": 104,
+     "attendu": {
+      "statut": "envoyee",
+      "envoyee_le": "2026-11-05"
+     }
+    }
+   ],
+   "jeu": "test"
+  },
+  {
+   "id": "T04",
+   "demande": "Avec quel CV ai-je postulé chez Basque Robotique ?",
+   "parcours": [
+    "consulter_candidature"
+   ],
+   "ecritures": 0,
+   "verifs": [
+    {
+     "aucune_ecriture": true
+    },
+    {
+     "reponse_contient": [
+      "IA générative"
+     ]
+    }
+   ],
+   "jeu": "test"
+  },
+  {
+   "id": "T05",
+   "demande": "Repousse d'une semaine la relance de ma candidature chez Basque Robotique.",
+   "parcours": [
+    "planifier_relance"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "candidature_id": 103,
+     "attendu": {
+      "relance_le": "2026-11-13"
+     }
+    }
+   ],
+   "jeu": "test"
+  },
+  {
+   "id": "T06",
+   "demande": "Retiens l'offre de vision par ordinateur à Tarbes et mets-lui mon CV IA générative.",
+   "parcours": [
+    "retenir_offre",
+    "associer_cv"
+   ],
+   "ecritures": 2,
+   "verifs": [
+    {
+     "candidature": {
+      "offre_id": 10
+     },
+     "attendu": {
+      "statut": "a_postuler",
+      "cv_id": 2
+     }
+    }
+   ],
+   "jeu": "test"
+  },
+  {
+   "id": "T07",
+   "demande": "Note dans ma candidature chez Landes Tech que le recruteur s'appelle M. Duval.",
+   "parcours": [
+    "ajouter_note"
+   ],
+   "ecritures": 1,
+   "verifs": [
+    {
+     "note": 106,
+     "contient": "Duval"
+    }
+   ],
+   "jeu": "test"
+  },
+  {
+   "id": "T08",
+   "demande": "Retiens l'offre en IA.",
+   "parcours": [
+    "retenir_offre"
+   ],
+   "ecritures": 0,
+   "remarque": "Ambiguë : trois offres nouvelles parlent d'IA. L'agent doit demander laquelle, sans rien modifier.",
+   "verifs": [
+    {
+     "aucune_ecriture": true
+    }
+   ],
+   "jeu": "test"
+  }
+ ]
 }

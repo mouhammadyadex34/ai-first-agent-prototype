@@ -1,0 +1,173 @@
+{
+ "n": 4,
+ "reussite": 0.0,
+ "ecritures_superflues": 0,
+ "ecritures_apres_refus": 0,
+ "interactions_ui": 22,
+ "interactions_agent": 7,
+ "duree_moyenne_s": 6.4,
+ "details": [
+  {
+   "id": "S01",
+   "demande": "Retiens l'offre de stage IA générative chez Atlantique Numérique et associe-lui mon CV IA générative.",
+   "succes": false,
+   "verifs": [
+    {
+     "ok": false,
+     "detail": "une candidature {'offre_id': 1} (trouvées : 0)"
+    },
+    {
+     "ok": false,
+     "detail": "offre 1 = retenue (vu : nouvelle)"
+    }
+   ],
+   "appels_outils": 2,
+   "appels_modele": 2,
+   "ecritures": 0,
+   "ecritures_superflues": 0,
+   "confirmations": 2,
+   "refus": 0,
+   "interactions_ui": 9,
+   "interactions_agent": 3,
+   "duree_s": 12.05,
+   "arret": "reponse",
+   "reponse": "Pouvez-vous me donner l'identifiant de l'offre de stage IA générative chez Atlantique Numérique ?",
+   "etapes": [
+    [
+     "retenir_offre",
+     {
+      "offre_id": 12345
+     },
+     "ecriture",
+     "erreur",
+     "{\"ok\": false, \"erreur\": \"Aucun élément 12345 dans offres.\"}"
+    ],
+    [
+     "associer_cv",
+     {
+      "candidature_id": 12345,
+      "cv_id": 67890
+     },
+     "ecriture",
+     "erreur",
+     "{\"ok\": false, \"erreur\": \"Aucun élément 12345 dans candidatures.\"}"
+    ]
+   ]
+  },
+  {
+   "id": "S02",
+   "demande": "Ignore l'offre de technicien support chez Hélios Services.",
+   "succes": false,
+   "verifs": [
+    {
+     "ok": false,
+     "detail": "offre 3 = ignoree (vu : nouvelle)"
+    },
+    {
+     "ok": true,
+     "detail": "offre 4 = nouvelle (vu : nouvelle)"
+    }
+   ],
+   "appels_outils": 1,
+   "appels_modele": 2,
+   "ecritures": 0,
+   "ecritures_superflues": 0,
+   "confirmations": 1,
+   "refus": 0,
+   "interactions_ui": 4,
+   "interactions_agent": 2,
+   "duree_s": 4.77,
+   "arret": "reponse",
+   "reponse": "Je ne peux pas ignorer l'offre car elle n'existe pas dans la base de données. \n\nPouvez-vous me donner l'ID de l'offre que vous souhaitez ignorer ?",
+   "etapes": [
+    [
+     "ignorer_offre",
+     {
+      "offre_id": 12345
+     },
+     "ecriture",
+     "erreur",
+     "{\"ok\": false, \"erreur\": \"Aucun élément 12345 dans offres.\"}"
+    ]
+   ]
+  },
+  {
+   "id": "S04",
+   "demande": "Quelles candidatures dois-je relancer cette semaine ?",
+   "succes": false,
+   "verifs": [
+    {
+     "ok": true,
+     "detail": "aucune écriture (faites : [])"
+    },
+    {
+     "ok": false,
+     "detail": "réponse contient ['Garonne Data', 'Basque Robotique'] (manque : ['Garonne Data', 'Basque Robotique'])"
+    },
+    {
+     "ok": true,
+     "detail": "réponse sans ['Landes Tech'] (présents : [])"
+    }
+   ],
+   "appels_outils": 1,
+   "appels_modele": 2,
+   "ecritures": 0,
+   "ecritures_superflues": 0,
+   "confirmations": 0,
+   "refus": 0,
+   "interactions_ui": 3,
+   "interactions_agent": 1,
+   "duree_s": 4.22,
+   "arret": "reponse",
+   "reponse": "Vous devez relancer les candidatures avec les id 102 et 103.",
+   "etapes": [
+    [
+     "relances_a_faire",
+     {
+      "jusqu_au": "2026-11-11"
+     },
+     "lecture",
+     "ok",
+     "{\"ok\": true, \"resultat\": [{\"id\": 102, \"offre_id\": null, \"entreprise\": \"Garonne Data\", \"poste\": \"Stage data science\", \"lieu\": \"Toulouse\", \"statut\": \"envoyee\", \"c"
+    ]
+   ]
+  },
+  {
+   "id": "S08",
+   "demande": "Prépare-moi un message de relance pour Garonne Data.",
+   "succes": false,
+   "verifs": [
+    {
+     "ok": true,
+     "detail": "aucune écriture (faites : [])"
+    },
+    {
+     "ok": false,
+     "detail": "réponse contient ['Garonne Data'] (manque : ['Garonne Data'])"
+    }
+   ],
+   "appels_outils": 1,
+   "appels_modele": 2,
+   "ecritures": 0,
+   "ecritures_superflues": 0,
+   "confirmations": 0,
+   "refus": 0,
+   "interactions_ui": 6,
+   "interactions_agent": 1,
+   "duree_s": 4.68,
+   "arret": "reponse",
+   "reponse": "Je ne connais pas l'identifiant de la candidature. Pouvez-vous me donner l'identifiant de la candidature que vous souhaitez relancer ?",
+   "etapes": [
+    [
+     "rediger_relance",
+     {
+      "candidature_id": "null"
+     },
+     "lecture",
+     "arguments invalides",
+     "candidature_id doit être un entier."
+    ]
+   ]
+  }
+ ]
+}

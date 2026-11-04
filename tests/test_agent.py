@@ -17,21 +17,35 @@ def test_every_tool_maps_to_a_service_and_a_journey():
         assert hasattr(App, t.name) and t.parcours in JOURNEYS and t.effet in ("lecture", "ecriture")
 
 
-def test_write_is_executed_only_after_confirmation():
+def test_write_is_executed_only_after_confirmation_of_a_named_object():
     app = App(JOUR)
     asked = []
-    llm = ScriptedChat([Reply(tool_calls=[ToolCall("retenir_offre", {"offre_id": "5"})]), Reply("C'est fait.")])
-    trace = Agent(app, llm, confirmer=lambda n, a: asked.append((n, a)) or True).run("Retiens Côte Web")
-    assert asked == [("retenir_offre", {"offre_id": 5})]  # "5" converted to int before confirmation
+    llm = ScriptedChat([Reply(tool_calls=[ToolCall("retenir_offre", {"offre": "Côte Web"})]), Reply("C'est fait.")])
+    trace = Agent(app, llm, confirmer=lambda n, a, d: asked.append((n, a, d)) or True).run("Retiens Côte Web")
+    assert asked[0][:2] == ("retenir_offre", {"offre_id": 5})  # resolved before the human is asked
+    assert "Côte Web" in asked[0][2] and "full stack" in asked[0][2]
     assert app.ecritures == ["retenir_offre 5"] and trace.reponse == "C'est fait."
+
+
+def test_invented_or_ambiguous_references_never_reach_the_human():
+    app = App(JOUR)
+    asked = []
+    llm = ScriptedChat([Reply(tool_calls=[ToolCall("retenir_offre", {"offre": "12345"}),
+                                          ToolCall("retenir_offre", {"offre": "Aerotech Sud"}),
+                                          ToolCall("ignorer_offre", {"offre": "Licorne Inconnue"})]),
+                        Reply("Laquelle ?")])
+    trace = Agent(app, llm, confirmer=lambda n, a, d: asked.append(n) or True).run("…")
+    assert asked == [] and app.ecritures == []
+    assert [e[3] for e in trace.etapes] == ["référence invalide"] * 3
+    assert "ambigu" in trace.etapes[1][4] and "Stage développeur Python" in trace.etapes[1][4]
 
 
 def test_refusal_blocks_the_write_and_its_retry():
     app = App(JOUR)
-    call = ToolCall("marquer_envoyee", {"candidature_id": 101})
+    call = ToolCall("marquer_envoyee", {"candidature": "Pyrène Logiciels"})
     llm = ScriptedChat([Reply(tool_calls=[call]), Reply(tool_calls=[call]), Reply("Rien n'a été fait.")])
     asked = []
-    trace = Agent(app, llm, confirmer=lambda n, a: asked.append(n) and False).run("Marque Pyrène envoyée")
+    trace = Agent(app, llm, confirmer=lambda n, a, d: asked.append(n) and False).run("Marque Pyrène envoyée")
     assert app.ecritures == []
     assert len(asked) == 1 and trace.refus == 1  # the second identical proposal never reaches the human
     assert trace.etapes[1][3] == "déjà refusée"
@@ -41,12 +55,13 @@ def test_reads_need_no_confirmation_and_errors_go_back_to_the_model():
     app = App(JOUR)
     llm = ScriptedChat([
         Reply(tool_calls=[ToolCall("lister_cv", {}), ToolCall("outil_fantome", {}),
-                          ToolCall("associer_cv", {"candidature_id": 104}), ToolCall("retenir_offre", {"offre_id": 999})]),
+                          ToolCall("associer_cv", {"candidature": "Navarre Soft", "cv": "null"}),
+                          ToolCall("marquer_envoyee", {"candidature": "Garonne Data"})]),
         Reply("Terminé."),
     ])
-    trace = Agent(app, llm, confirmer=lambda n, a: True).run("…")
+    trace = Agent(app, llm, confirmer=lambda n, a, d: True).run("…")
     statuts = [e[3] for e in trace.etapes]
-    assert statuts == ["ok", "outil inconnu", "arguments invalides", "erreur"]
+    assert statuts == ["ok", "outil inconnu", "arguments invalides", "erreur"]  # Garonne Data is already sent
     assert trace.confirmations == 1 and app.ecritures == []
     tool_messages = [m for m in llm.received[1] if m["role"] == "tool"]
     assert len(tool_messages) == 4 and "Outil inconnu" in tool_messages[1]["content"]
@@ -73,14 +88,23 @@ ORACLE = {
             ("marquer_envoyee", {"candidature_id": None})],
     "S13": [("associer_cv", {"candidature_id": 104, "cv_id": 3}), ("associer_cv", {"candidature_id": 105, "cv_id": 3})],
     "S15": [("ignorer_offre", {"offre_id": 3}), ("ignorer_offre", {"offre_id": 4}), ("retenir_offre", {"offre_id": 6})],
+    "T01": [("retenir_offre", {"offre_id": 11})],
+    "T02": [("ignorer_offre", {"offre_id": 7})],
+    "T03": [("marquer_envoyee", {"candidature_id": 104})],
+    "T04": [], "T08": [],
+    "T05": [("planifier_relance", {"candidature_id": 103, "jour": "2026-11-13"})],
+    "T06": [("retenir_offre", {"offre_id": 10}), ("associer_cv", {"candidature_id": None, "cv_id": 2})],
+    "T07": [("ajouter_note", {"candidature_id": 106, "texte": "Le recruteur s'appelle M. Duval"})],
 }
 ORACLE_ANSWERS = {"S04": "Garonne Data (relance due le 3) et Basque Robotique (le 6).",
-                  "S08": "Voici un brouillon de relance pour Garonne Data.", "S14": "Tu as envoyé 3 candidatures."}
+                  "S08": "Voici un brouillon de relance pour Garonne Data.", "S14": "Tu as envoyé 3 candidatures.",
+                  "T04": "Avec ton CV IA générative."}
 
 
 def test_annotations_are_satisfiable():
     data = load(SCENARIOS)
-    assert len(data["scenarios"]) == 15
+    assert len(data["scenarios"]) == 23
+    assert sum(s["jeu"] == "test" for s in data["scenarios"]) == 8
     for sc in data["scenarios"]:
         app, created = App(JOUR), None
         for name, args in ORACLE[sc["id"]]:
@@ -98,7 +122,7 @@ def test_annotations_are_satisfiable():
 def test_run_scenario_with_scripted_model():
     sc = next(s for s in load(SCENARIOS)["scenarios"] if s["id"] == "S02")
     llm = ScriptedChat([Reply(tool_calls=[ToolCall("chercher_offres", {"entreprise": "Hélios"})]),
-                        Reply(tool_calls=[ToolCall("ignorer_offre", {"offre_id": 3})]),
+                        Reply(tool_calls=[ToolCall("ignorer_offre", {"offre": "technicien support Hélios"})]),
                         Reply("J'ai ignoré l'offre de technicien support.")])
     r = run_scenario(sc, llm, JOUR)
     assert r["succes"] and r["ecritures_superflues"] == 0 and r["interactions_ui"] == 4 and r["interactions_agent"] == 2
