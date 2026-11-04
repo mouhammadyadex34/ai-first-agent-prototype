@@ -1,0 +1,31 @@
+{
+  "description": "Données fictives (entreprises inventées) pour l'évaluation. Date de référence : jeudi 5 novembre 2026.",
+  "documents": [
+    {"id": 1, "titre": "CV Full stack", "type": "cv"},
+    {"id": 2, "titre": "CV IA générative", "type": "cv"},
+    {"id": 3, "titre": "CV Data", "type": "cv"},
+    {"id": 4, "titre": "Lettre type", "type": "lettre"}
+  ],
+  "offres": [
+    {"id": 1, "titre": "Stage développeur IA générative (LLM, RAG)", "entreprise": "Atlantique Numérique", "lieu": "Bordeaux", "competences": ["llm", "rag", "python"]},
+    {"id": 2, "titre": "Stage ingénieur IA – assistants conversationnels", "entreprise": "Médoc Intelligence", "lieu": "Bordeaux", "competences": ["llm", "agents", "python"]},
+    {"id": 3, "titre": "Stage technicien support informatique", "entreprise": "Hélios Services", "lieu": "Pau", "competences": ["support", "windows"]},
+    {"id": 4, "titre": "Stage assistant administratif numérique", "entreprise": "Hélios Services", "lieu": "Pau", "competences": ["bureautique"]},
+    {"id": 5, "titre": "Stage développeur full stack React / Django", "entreprise": "Côte Web", "lieu": "Biarritz", "competences": ["react", "django", "postgresql"]},
+    {"id": 6, "titre": "Stage ingénieur cloud DevOps", "entreprise": "Adour Cloud", "lieu": "Bayonne", "competences": ["docker", "kubernetes", "ci/cd"]},
+    {"id": 7, "titre": "Stage data analyst", "entreprise": "Landes Analytics", "lieu": "Mont-de-Marsan", "competences": ["sql", "power bi"]},
+    {"id": 8, "titre": "Stage développeur Python", "entreprise": "Aerotech Sud", "lieu": "Toulouse", "competences": ["python", "fastapi"]},
+    {"id": 9, "titre": "Stage ingénieur logiciel embarqué", "entreprise": "Aerotech Sud", "lieu": "Toulouse", "competences": ["c", "rtos"]},
+    {"id": 10, "titre": "Stage IA – vision par ordinateur", "entreprise": "Pyrénées Vision", "lieu": "Tarbes", "competences": ["yolo", "pytorch"]},
+    {"id": 11, "titre": "Stage développeur mobile", "entreprise": "Océan Apps", "lieu": "La Rochelle", "competences": ["flutter"]},
+    {"id": 12, "titre": "Stage data engineer", "entreprise": "Garonne Data", "lieu": "Toulouse", "competences": ["sql", "spark"]}
+  ],
+  "candidatures": [
+    {"id": 101, "entreprise": "Pyrène Logiciels", "poste": "Stage développeur back-end", "lieu": "Pau", "statut": "a_postuler", "cv_id": 1},
+    {"id": 102, "entreprise": "Garonne Data", "poste": "Stage data science", "lieu": "Toulouse", "statut": "envoyee", "cv_id": 3, "envoyee_le": "2026-10-27", "relance_le": "2026-11-03"},
+    {"id": 103, "entreprise": "Basque Robotique", "poste": "Stage IA pour la robotique", "lieu": "Bidart", "statut": "envoyee", "cv_id": 2, "envoyee_le": "2026-10-30", "relance_le": "2026-11-06"},
+    {"id": 104, "entreprise": "Navarre Soft", "poste": "Stage développeur web", "lieu": "Bayonne", "statut": "a_postuler"},
+    {"id": 105, "entreprise": "Béarn Énergies", "poste": "Stage data analyst", "lieu": "Pau", "statut": "a_postuler"},
+    {"id": 106, "entreprise": "Landes Tech", "poste": "Stage ingénieur qualité logicielle", "lieu": "Dax", "statut": "envoyee", "cv_id": 1, "envoyee_le": "2026-11-02", "relance_le": "2026-11-20"}
+  ]
+}
